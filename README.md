@@ -80,12 +80,6 @@ history_4 = ModelProcessor.compile_and_fit_model(model_4, train_generator, epoch
 
 ### Model Performance Evaluation
 ```python
-fc_nn_accuracy = fc_nn.evaluate(test_generator)[1]
-c_nn_accuracy = c_nn.evaluate(test_generator)[1]
-vgg19_accuracy = vgg19.evaluate(test_generator)[1]
-resnet50_accuracy = resnet50.evaluate(test_generator)[1]
-```
-```python
 ModelProcessor.evaluate_model(model_1, test_generator, model_1_name)
 ModelProcessor.evaluate_model(model_2, test_generator, model_2_name)
 ModelProcessor.evaluate_model(model_3, test_generator, model_3_name)
