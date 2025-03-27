@@ -9,88 +9,71 @@ This project explores various convolutional neural network (CNN) architectures a
 
 ## Implementation
 
-### Importing Required Libraries
-```python
-from keras import Sequential
-from keras.applications import VGG19, ResNet50
-from keras.layers import Flatten, Dense, Conv2D, MaxPooling2D
-from keras.preprocessing.image import ImageDataGenerator
-from matplotlib import pyplot as plt
-```
-
 ### Data Preparation
 ```python
-train_data_directory = "data/train"
-valid_data_directory = "data/val"
-test_data_directory = "data/test"
-
-train_data_generator = ImageDataGenerator(rescale=1. / 255)
-valid_data_generator = ImageDataGenerator(rescale=1. / 255)
-test_data_generator = ImageDataGenerator(rescale=1. / 255)
-```
-```python
-train_generator = train_data_generator.flow_from_directory(
-   train_data_directory,
-   target_size=(150, 150),
-   batch_size=32,
-   class_mode='binary'
-)
-
-valid_generator = valid_data_generator.flow_from_directory(
-   valid_data_directory,
-   target_size=(150, 150),
-   batch_size=32,
-   class_mode='binary'
-)
+target_size = (150, 150)
+train_generator, valid_generator, test_generator = ImageGenerator.get_train_valid_test_generators(target_size);
 ```
 ![Sample Images](/images/data.png)
 
 ### Model Architectures
 
+```python
+epochs = 5
+```
 #### Fully Connected Neural Network
 ```python
-fc_nn = Sequential([
-   Flatten(input_shape=(150, 150, 3)),
-   Dense(512, activation='relu'),
-   Dense(256, activation='relu'),
-   Dense(128, activation='relu'),
-   Dense(1, activation='sigmoid')
+model_1_name = 'Fully Connected NN'
+model_1 = Sequential([
+    Flatten(input_shape=(150, 150, 3)),
+    Dense(512, activation='relu'),
+    Dense(256, activation='relu'),
+    Dense(128, activation='relu'),
+    Dense(1, activation='sigmoid')
 ])
 
-fc_nn.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-fc_nn_history = fc_nn.fit(train_generator, epochs=5, validation_data=valid_generator)
+history_1 = ModelProcessor.compile_and_fit_model(model_1, train_generator, epochs, valid_generator)
+
 ```
 ![Training Progress](images/train1.png)
 
 #### Convolutional Neural Network (CNN)
 ```python
-c_nn = Sequential([
-   Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
-   MaxPooling2D((2, 2)),
-   Conv2D(64, (3, 3), activation='relu'),
-   MaxPooling2D((2, 2)),
-   Flatten(),
-   Dense(64, activation='relu'),
-   Dense(1, activation='sigmoid')
+model_2_name = 'Convolutional NN'
+model_2 = Sequential([
+    Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)),
+    MaxPooling2D((2, 2)),
+    Conv2D(64, (3, 3), activation='relu'),
+    MaxPooling2D((2, 2)),
+    Flatten(),
+    Dense(64, activation='relu'),
+    Dense(1, activation='sigmoid')
 ])
 
-c_nn.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-c_nn_history = c_nn.fit(train_generator, epochs=5, validation_data=valid_generator)
+history_2 = ModelProcessor.compile_and_fit_model(model_2, train_generator, epochs, valid_generator)
 ```
 ![Training Progress](images/train2.png)
 
 ### Transfer Learning (VGG19 & ResNet50)
 ```python
-vgg19_base = VGG19(include_top=False, weights='imagenet', input_shape=(150, 150, 3))
-for layer in vgg19_base.layers:
-   layer.trainable = False
-vgg19 = Sequential([vgg19_base, Flatten(), Dense(512, activation='relu'), Dense(1, activation='sigmoid')])
+model_3_name = 'VGG19'
+model_3 = VGG19(
+    weights='imagenet',
+    include_top=False,
+    input_shape=(150, 150, 3)
+)
+
+history_3 = ModelProcessor.compile_and_fit_model(model_3, train_generator, epochs, valid_generator, False)
 ```
 ```python
-resnet50_base = ResNet50(include_top=False, weights='imagenet', input_shape=(150, 150, 3))
-for layer in resnet50_base.layers:
-   layer.trainable = False
-resnet50 = Sequential([resnet50_base, Flatten(), Dense(512, activation='relu'), Dense(1, activation='sigmoid')])
+model_4_name = 'ResNet50'
+model_4 = ResNet50(
+    weights='imagenet',
+    include_top=False,
+    input_shape=(150, 150, 3)
+)
+
+history_4 = ModelProcessor.compile_and_fit_model(model_4, train_generator, epochs, valid_generator, False)
 ```
 ![Training Progress](images/train3.png)
 ![Training Progress](images/train4.png)
@@ -103,46 +86,35 @@ vgg19_accuracy = vgg19.evaluate(test_generator)[1]
 resnet50_accuracy = resnet50.evaluate(test_generator)[1]
 ```
 ```python
-print(f"Fully Connected NN: {fc_nn_accuracy}")
-print(f"Convolutional NN: {c_nn_accuracy}")
-print(f"VGG19: {vgg19_accuracy}")
-print(f"ResNet50: {resnet50_accuracy}")
+ModelProcessor.evaluate_model(model_1, test_generator, model_1_name)
+ModelProcessor.evaluate_model(model_2, test_generator, model_2_name)
+ModelProcessor.evaluate_model(model_3, test_generator, model_3_name)
+ModelProcessor.evaluate_model(model_4, test_generator, model_4_name)
 ```
 ![Performance Comparison](images/evaluate.png)
 
 Model Training After increasing epochs:
 ```python
-fc_nn_retrain_history = fc_nn.fit(
-    train_generator,
-    epochs=10,
-    validation_data=valid_generator
-)
-c_nn_retrain_history = c_nn.fit(
-    train_generator,
-    epochs=10,
-    validation_data=valid_generator
-)
+epochs_retrain = 10
+```
+```python
+history_5 = ModelProcessor.fit_model(model_1, train_generator, epochs_retrain, valid_generator)
+history_6 = ModelProcessor.fit_model(model_2, train_generator, epochs_retrain, valid_generator)
 ```
 ![After increasing epochs](images/train11.png)
 ![After increasing epochs](images/train22.png)
 
 Model Performance Evaluation After increasing epochs:
 ```python
-fc_nn_accuracy_extended = fc_nn.evaluate(test_generator)[1]
-c_nn_accuracy_extended = c_nn.evaluate(test_generator)[1]
-
-print(f"Fully Connected NN (Extended): {fc_nn_accuracy_extended}")
-print(f"Convolutional NN (Extended): {c_nn_accuracy_extended}")
+ModelProcessor.evaluate_model(model_1, test_generator, model_1_name)
+ModelProcessor.evaluate_model(model_2, test_generator, model_2_name)
 ```
 ![After increasing epochs](images/evaluate1.png)
 
 ### Learning Curves Visualization
 ```python
-_, axes = plt.subplots(1, 2, figsize=(10, 5))
-axes[0].plot(fc_nn_history.history['accuracy'], label='Training Accuracy')
-axes[0].plot(fc_nn_history.history['val_accuracy'], label='Validation Accuracy')
-axes[0].set_title('Fully Connected NN')
-axes[0].legend()
+DataVisualizer.plot_train_curves(history_5, history_6, model_1_name, model_2_name)
+DataVisualizer.plot_loss_curves(history_5, history_6, model_1_name, model_2_name)
 ```
 ![Learning Curves](images/graph1.png)
 ![Learning Curves](images/graph2.png)
