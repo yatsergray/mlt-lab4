@@ -9,6 +9,8 @@ This project explores various convolutional neural network (CNN) architectures a
 
 ## Implementation
 
+Google Colab: [Link](https://colab.research.google.com/drive/1pJ4aQ3kkB7eyLK3-Gjm3yiJiAGcTTnZ5?usp=sharing)
+
 ### Data Preparation
 ```python
 target_size = (150, 150)
